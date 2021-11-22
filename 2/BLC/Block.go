@@ -46,4 +46,6 @@ func (b *Block) SetHash(){
 
 }
 // 生成一个创世区块
-
+func CreateGenesisBlock(data string) *Block{
+	return NewBlock(1,nil,[]byte(data))
+}
