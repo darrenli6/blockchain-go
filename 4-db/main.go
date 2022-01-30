@@ -1,7 +1,7 @@
 package main
 
 import (
-	"blockchain-go/3-pow/BLC"
+	"blockchain-go/4-db/BLC"
 	"fmt"
 )
 
