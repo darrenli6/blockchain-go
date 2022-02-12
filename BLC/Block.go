@@ -66,11 +66,13 @@ func (block *Block) Serialize() []byte {
 }
 
 // 反序列化 ，将字节数组结构化为区块
-func (block *Block) DecerializeBlock(blockBytes []byte) *Block {
+func DecerializeBlock(blockBytes []byte) *Block {
+
+	var block Block
 	decoder := gob.NewDecoder(bytes.NewReader(blockBytes))
 
-	if err := decoder.Decode(block); err != nil {
+	if err := decoder.Decode(&block); err != nil {
 		log.Panicf("Decerialize the to []byte to block failed ! %v \n", err)
 	}
-	return block
+	return &block
 }

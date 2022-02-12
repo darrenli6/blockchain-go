@@ -24,10 +24,9 @@ func CreateBlockChainWithGenesisBlock() *BlockChain {
 
 		log.Panicf("open  the db failed %v \n", err)
 	}
-	defer db.Close()
 
 	var blockHash []byte // 需要存储到数据库中的区块hash
-	db.Update(func(tx *bolt.Tx) error {
+	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blockTableName))
 		if b == nil {
 			b, err = tx.CreateBucket([]byte(blockTableName))
@@ -59,11 +58,52 @@ func CreateBlockChainWithGenesisBlock() *BlockChain {
 
 	})
 
+	if err != nil {
+		log.Panicf("update the data of genesis block failed %v \n", err)
+	}
+
 	return &BlockChain{db, blockHash}
 }
 
 // 添加新区块到区块链中
-func (bc *BlockChain) AddBlock(height int64, data []byte, prevBlockHash []byte) {
+func (bc *BlockChain) AddBlock(data []byte) {
 	//newBlock := NewBlock(height, prevBlockHash, data)
 	//bc.Blocks = append(bc.Blocks, newBlock)
+
+	// 更新数据
+	err := bc.DB.Update(func(tx *bolt.Tx) error {
+
+		// 获取数据表
+		b := tx.Bucket([]byte(blockTableName))
+
+		if nil != b { // 明确表存在
+			// 3 将获取最新区块的hash
+			//newEastHash := b.Get([]byte("1"))
+
+			blockBytes := b.Get(bc.Tip)
+			lastest_block := DecerializeBlock(blockBytes)
+			//4 创建新的区块
+			newBlock := NewBlock(lastest_block.Height+1, lastest_block.Hash, data)
+			// 5. 存入数据库
+			err := b.Put(newBlock.Hash, newBlock.Serialize())
+			if err != nil {
+				log.Panicf("put the data of new block info db failed %v \n", err)
+			}
+			// 6 更新最新区块的值
+			err = b.Put([]byte("1"), newBlock.Hash)
+			if err != nil {
+				log.Panicf("put the hash of new block info db failed %v \n", err)
+			}
+
+			bc.Tip = newBlock.Hash
+
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Panicf("update the db of block failed , %v \n", err)
+
+	}
+
 }

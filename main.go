@@ -4,46 +4,66 @@ import (
 	"blockchain-go/4-pow/BLC"
 	"fmt"
 	"github.com/boltdb/bolt"
-	"log"
 )
 
 func main() {
 
-	db, err := bolt.Open("bc.db", 0600, nil)
-	if err != nil {
-		log.Panicf("open  the db failed %v \n", err)
-	}
+	blockChain := BLC.CreateBlockChainWithGenesisBlock()
+	defer blockChain.DB.Close()
 
-	defer db.Close()
+	blockChain.AddBlock([]byte("send 100 btc to darren"))
 
-	genesisBlock := BLC.NewBlock(1, nil, []byte("test"))
-
-	db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucket([]byte("blocks"))
-		if err != nil {
-			log.Panicf("create bucket failed %v \n", err)
-		}
-		blockData := genesisBlock.Serialize() // 序列化的操作
-		err = b.Put([]byte("1"), blockData)
-		if nil != err {
-			log.Panicf("put data to db failed ! error %v \n", err)
-		}
-		return nil
-
-	})
-
-	err = db.View(func(tx *bolt.Tx) error {
+	blockChain.AddBlock([]byte("send 200 btc to darren"))
+	blockChain.AddBlock([]byte("send 300 btc to darren"))
+	blockChain.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("blocks"))
 		if nil != b {
-			data := b.Get([]byte("1"))
-			fmt.Printf("data : %v \n", genesisBlock.DecerializeBlock(data))
+			value := b.Get([]byte("1"))
+			fmt.Printf("value : %x \n", (value))
+			block := b.Get(value)
 
+			fmt.Printf("the Height is: %v \n ", BLC.DecerializeBlock(block).Height)
+		} else {
+			fmt.Println("the bucket is nil \n")
 		}
 		return nil
 	})
-	if nil != err {
-		log.Panicf("get data of block failed ! error %v \n", err)
-	}
+
+	//db, err := bolt.Open("bc.db", 0600, nil)
+	//if err != nil {
+	//	log.Panicf("open  the db failed %v \n", err)
+	//}
+	//
+	//defer db.Close()
+	//
+	//genesisBlock := BLC.NewBlock(1, nil, []byte("test"))
+	//
+	//db.Update(func(tx *bolt.Tx) error {
+	//	b, err := tx.CreateBucket([]byte("blocks"))
+	//	if err != nil {
+	//		log.Panicf("create bucket failed %v \n", err)
+	//	}
+	//	blockData := genesisBlock.Serialize() // 序列化的操作
+	//	err = b.Put([]byte("1"), blockData)
+	//	if nil != err {
+	//		log.Panicf("put data to db failed ! error %v \n", err)
+	//	}
+	//	return nil
+	//
+	//})
+	//
+	//err = db.View(func(tx *bolt.Tx) error {
+	//	b := tx.Bucket([]byte("blocks"))
+	//	if nil != b {
+	//		data := b.Get([]byte("1"))
+	//		fmt.Printf("data : %v \n", genesisBlock.DecerializeBlock(data))
+	//
+	//	}
+	//	return nil
+	//})
+	//if nil != err {
+	//	log.Panicf("get data of block failed ! error %v \n", err)
+	//}
 
 	//blockChain := BLC.CreateBlockChainWithGenesisBlock()
 	//
