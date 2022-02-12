@@ -8,11 +8,11 @@ func main() {
 
 	blockChain := BLC.CreateBlockChainWithGenesisBlock()
 	defer blockChain.DB.Close()
-
-	blockChain.AddBlock([]byte("send 100 btc to darren"))
-
-	blockChain.AddBlock([]byte("send 200 btc to darren"))
-	blockChain.AddBlock([]byte("send 300 btc to darren"))
+	//
+	//blockChain.AddBlock([]byte("send 100 btc to darren"))
+	//
+	//blockChain.AddBlock([]byte("send 200 btc to darren"))
+	//blockChain.AddBlock([]byte("send 300 btc to darren"))
 
 	blockChain.PrintChain()
 

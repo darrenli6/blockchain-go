@@ -117,27 +117,20 @@ func (bc *BlockChain) PrintChain() {
 
 	var curBlock *Block
 
-	var currentHash []byte = bc.Tip
+	//var currentHash []byte = bc.Tip
+
+	// 创建一个迭代器的对象
+	bcit := bc.Iterator()
 
 	for {
-		bc.DB.View(func(tx *bolt.Tx) error {
-
-			//1  获取表
-			b := tx.Bucket([]byte(blockTableName))
-			if nil != b {
-				//2 获取当前区块信息
-
-				blockBytes := b.Get(currentHash)
-				curBlock = DecerializeBlock(blockBytes)
-				fmt.Printf(" \t Height : %d \n", curBlock.Height)
-				fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
-				fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
-				fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
-				fmt.Printf(" \t Data : %s \n", string(curBlock.Data))
-				fmt.Printf(" \t Nonce : %d \n", curBlock.Nonce)
-			}
-			return nil
-		})
+		fmt.Println("----------------------------------")
+		curBlock = bcit.Next()
+		fmt.Printf(" \t Height : %d \n", curBlock.Height)
+		fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
+		fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
+		fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
+		fmt.Printf(" \t Data : %s \n", string(curBlock.Data))
+		fmt.Printf(" \t Nonce : %d \n", curBlock.Nonce)
 
 		// 判断是否已经遍历到创世区块
 		var hashInt big.Int
@@ -147,7 +140,7 @@ func (bc *BlockChain) PrintChain() {
 		}
 
 		// 更新一下
-		currentHash = curBlock.PreBlockHash
+		//currentHash = curBlock.PreBlockHash
 
 	}
 
