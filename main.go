@@ -2,8 +2,6 @@ package main
 
 import (
 	"blockchain-go/4-pow/BLC"
-	"fmt"
-	"github.com/boltdb/bolt"
 )
 
 func main() {
@@ -15,19 +13,22 @@ func main() {
 
 	blockChain.AddBlock([]byte("send 200 btc to darren"))
 	blockChain.AddBlock([]byte("send 300 btc to darren"))
-	blockChain.DB.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("blocks"))
-		if nil != b {
-			value := b.Get([]byte("1"))
-			fmt.Printf("value : %x \n", (value))
-			block := b.Get(value)
 
-			fmt.Printf("the Height is: %v \n ", BLC.DecerializeBlock(block).Height)
-		} else {
-			fmt.Println("the bucket is nil \n")
-		}
-		return nil
-	})
+	blockChain.PrintChain()
+
+	//blockChain.DB.View(func(tx *bolt.Tx) error {
+	//	b := tx.Bucket([]byte("blocks"))
+	//	if nil != b {
+	//		value := b.Get([]byte("1"))
+	//		fmt.Printf("value : %x \n", (value))
+	//		block := b.Get(value)
+	//
+	//		fmt.Printf("the Height is: %v \n ", BLC.DecerializeBlock(block).Height)
+	//	} else {
+	//		fmt.Println("the bucket is nil \n")
+	//	}
+	//	return nil
+	//})
 
 	//db, err := bolt.Open("bc.db", 0600, nil)
 	//if err != nil {

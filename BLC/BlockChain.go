@@ -1,8 +1,10 @@
 package BLC
 
 import (
+	"fmt"
 	"github.com/boltdb/bolt"
 	"log"
+	"math/big"
 )
 
 const dbName = "bc.db" // 存储数据的数据库文件
@@ -103,6 +105,49 @@ func (bc *BlockChain) AddBlock(data []byte) {
 
 	if err != nil {
 		log.Panicf("update the db of block failed , %v \n", err)
+
+	}
+
+}
+
+// 遍历输出区块链中所有区块的信息
+func (bc *BlockChain) PrintChain() {
+
+	fmt.Println("区块链信息:")
+
+	var curBlock *Block
+
+	var currentHash []byte = bc.Tip
+
+	for {
+		bc.DB.View(func(tx *bolt.Tx) error {
+
+			//1  获取表
+			b := tx.Bucket([]byte(blockTableName))
+			if nil != b {
+				//2 获取当前区块信息
+
+				blockBytes := b.Get(currentHash)
+				curBlock = DecerializeBlock(blockBytes)
+				fmt.Printf(" \t Height : %d \n", curBlock.Height)
+				fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
+				fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
+				fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
+				fmt.Printf(" \t Data : %s \n", string(curBlock.Data))
+				fmt.Printf(" \t Nonce : %d \n", curBlock.Nonce)
+			}
+			return nil
+		})
+
+		// 判断是否已经遍历到创世区块
+		var hashInt big.Int
+		hashInt.SetBytes(curBlock.PreBlockHash)
+		if big.NewInt(0).Cmp(&hashInt) == 0 {
+			break
+		}
+
+		// 更新一下
+		currentHash = curBlock.PreBlockHash
 
 	}
 
