@@ -46,7 +46,7 @@ func (proofOfWork *ProofOfWork) Run() ([]byte, int64) {
 		dataBytes := proofOfWork.prepareData(nonce)
 		hash = sha256.Sum256(dataBytes)
 		hashInt.SetBytes(hash[:])
-		fmt.Printf(" \r %x   ", hash)
+		//fmt.Printf(" \r %x   ", hash)
 
 		//难度比较
 		if proofOfWork.target.Cmp(&hashInt) == 1 {

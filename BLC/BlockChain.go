@@ -32,27 +32,7 @@ func CreateBlockChainWithGenesisBlock() *BlockChain {
 
 	if dbExists() {
 		fmt.Println("创世区块已经存在")
-
-		db, err := bolt.Open(dbName, 0600, nil)
-		if err != nil {
-
-			log.Panicf("open  the db failed %v \n", err)
-		}
-
-		var blockChain *BlockChain
-
-		// 取出存在的区块
-		err = db.View(func(tx *bolt.Tx) error {
-			b := tx.Bucket([]byte(blockTableName))
-			hash := b.Get([]byte("1"))
-			blockChain = &BlockChain{db, hash}
-			return nil
-		})
-		if err != nil {
-			log.Panicf("get the block from db failed %v \n", err)
-		}
-
-		return blockChain
+		os.Exit(1) //退出
 	}
 	db, err := bolt.Open(dbName, 0600, nil)
 	if err != nil {
@@ -176,5 +156,27 @@ func (bc *BlockChain) PrintChain() {
 		//currentHash = curBlock.PreBlockHash
 
 	}
+
+}
+
+//返回blockchain对象
+func BlockchainObject() *BlockChain {
+	//读取数据库
+	db, err := bolt.Open(dbName, 0600, nil)
+	if nil != err {
+		log.Panicf("get the object of blockchain failed %v \n", err)
+	}
+	var tip []byte
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockTableName))
+		if nil != b {
+			// 最新区块的hash value
+			tip = b.Get([]byte("1")) // 最新的hash value
+
+		}
+		return nil
+	})
+
+	return &BlockChain{db, tip}
 
 }

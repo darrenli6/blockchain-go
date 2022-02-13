@@ -4,9 +4,9 @@ import "blockchain-go/4-pow/BLC"
 
 func main() {
 
-	blockChain := BLC.CreateBlockChainWithGenesisBlock()
+	//blockChain := BLC.CreateBlockChainWithGenesisBlock()
 	//BLC.PrintUsage()
-	cli := BLC.CLI{blockChain}
+	cli := BLC.CLI{}
 	cli.Run()
 
 }
