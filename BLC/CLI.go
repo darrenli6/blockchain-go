@@ -33,7 +33,7 @@ func IsValidArgs() {
 
 // 添加区块
 
-func (cli *CLI) addBlock(data string) {
+func (cli *CLI) addBlock(txs []*Transaction) {
 
 	if dbExists() == false {
 		fmt.Println("数据库不存在")
@@ -41,7 +41,7 @@ func (cli *CLI) addBlock(data string) {
 	}
 	blockchain := BlockchainObject() //获取区块链对象
 	defer blockchain.DB.Close()
-	blockchain.AddBlock([]byte(data))
+	blockchain.AddBlock(txs)
 
 }
 
@@ -59,9 +59,9 @@ func (cli *CLI) printchain() {
 
 // 创建区块链
 
-func (cli *CLI) createBlockChainWithGenesis() {
+func (cli *CLI) createBlockChainWithGenesis(txs []*Transaction) {
 
-	CreateBlockChainWithGenesisBlock()
+	CreateBlockChainWithGenesisBlock(txs)
 }
 
 // 运行函数
@@ -108,7 +108,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.addBlock(*flagAddBlockArg)
+		cli.addBlock([]*Transaction{})
 	}
 
 	// 输出区块链信息命令
@@ -118,6 +118,6 @@ func (cli *CLI) Run() {
 
 	// 创建区块链
 	if crearteBlcWithGenesisCmd.Parsed() {
-		cli.createBlockChainWithGenesis()
+		cli.createBlockChainWithGenesis([]*Transaction{})
 	}
 }

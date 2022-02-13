@@ -28,7 +28,7 @@ func dbExists() bool {
 
 // 初始化区块链
 
-func CreateBlockChainWithGenesisBlock() *BlockChain {
+func CreateBlockChainWithGenesisBlock(txs []*Transaction) *BlockChain {
 
 	if dbExists() {
 		fmt.Println("创世区块已经存在")
@@ -53,7 +53,7 @@ func CreateBlockChainWithGenesisBlock() *BlockChain {
 		if nil != b {
 
 			// 创建创世区块
-			genesisBlock := CreateGenesisBlock("the data of genesis block")
+			genesisBlock := CreateGenesisBlock(nil)
 			err := b.Put(genesisBlock.Hash, genesisBlock.Serialize())
 			if nil != err {
 				log.Panicf("put data of genesisBlock to db failed ! error %v \n", err)
@@ -81,7 +81,7 @@ func CreateBlockChainWithGenesisBlock() *BlockChain {
 }
 
 // 添加新区块到区块链中
-func (bc *BlockChain) AddBlock(data []byte) {
+func (bc *BlockChain) AddBlock(txs []*Transaction) {
 	//newBlock := NewBlock(height, prevBlockHash, data)
 	//bc.Blocks = append(bc.Blocks, newBlock)
 
@@ -98,7 +98,7 @@ func (bc *BlockChain) AddBlock(data []byte) {
 			blockBytes := b.Get(bc.Tip)
 			lastest_block := DecerializeBlock(blockBytes)
 			//4 创建新的区块
-			newBlock := NewBlock(lastest_block.Height+1, lastest_block.Hash, data)
+			newBlock := NewBlock(lastest_block.Height+1, lastest_block.Hash, txs)
 			// 5. 存入数据库
 			err := b.Put(newBlock.Hash, newBlock.Serialize())
 			if err != nil {
@@ -142,7 +142,7 @@ func (bc *BlockChain) PrintChain() {
 		fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
 		fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
 		fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
-		fmt.Printf(" \t Data : %s \n", string(curBlock.Data))
+		fmt.Printf(" \t Transaaction : %v \n", curBlock.Txs)
 		fmt.Printf(" \t Nonce : %d \n", curBlock.Nonce)
 
 		// 判断是否已经遍历到创世区块
