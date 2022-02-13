@@ -5,6 +5,7 @@ import (
 	"github.com/boltdb/bolt"
 	"log"
 	"math/big"
+	"os"
 )
 
 const dbName = "bc.db" // 存储数据的数据库文件
@@ -17,10 +18,42 @@ type BlockChain struct {
 
 }
 
+// 判断数据库是否存在
+func dbExists() bool {
+	if _, err := os.Stat(dbName); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
 // 初始化区块链
 
 func CreateBlockChainWithGenesisBlock() *BlockChain {
 
+	if dbExists() {
+		fmt.Println("创世区块已经存在")
+
+		db, err := bolt.Open(dbName, 0600, nil)
+		if err != nil {
+
+			log.Panicf("open  the db failed %v \n", err)
+		}
+
+		var blockChain *BlockChain
+
+		// 取出存在的区块
+		err = db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(blockTableName))
+			hash := b.Get([]byte("1"))
+			blockChain = &BlockChain{db, hash}
+			return nil
+		})
+		if err != nil {
+			log.Panicf("get the block from db failed %v \n", err)
+		}
+
+		return blockChain
+	}
 	db, err := bolt.Open(dbName, 0600, nil)
 	if err != nil {
 
