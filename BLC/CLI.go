@@ -16,9 +16,9 @@ type CLI struct {
 // 展示用法
 func PrintUsage() {
 	fmt.Println("Usage: ")
-	fmt.Printf("\tcreateblcwothgenensis -- 创建区块链. \n")
+	fmt.Printf("\tcreateblockchain -address  adress  -- 地址. \n")
 	fmt.Printf("\taddblock -add DATA -- 交易数据 \n")
-	fmt.Printf("\tprintblockchain -- 输出区块链的信息. \n")
+	fmt.Printf("\tprintchain -- 输出区块链的信息. \n")
 
 }
 
@@ -59,9 +59,9 @@ func (cli *CLI) printchain() {
 
 // 创建区块链
 
-func (cli *CLI) createBlockChainWithGenesis(txs []*Transaction) {
+func (cli *CLI) createBlockChainWithGenesis(adress string) {
 
-	CreateBlockChainWithGenesisBlock(txs)
+	CreateBlockChainWithGenesisBlock(adress)
 }
 
 // 运行函数
@@ -76,7 +76,9 @@ func (cli *CLI) Run() {
 	crearteBlcWithGenesisCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 
 	// 获取命令行参数
-	flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据")
+	flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据..")
+	flagCreateBlockchainWithAddress := crearteBlcWithGenesisCmd.String("address", "", "地址..")
+
 	switch os.Args[1] {
 	case "addblock":
 		err := addBlockCmd.Parse(os.Args[2:])
@@ -118,6 +120,11 @@ func (cli *CLI) Run() {
 
 	// 创建区块链
 	if crearteBlcWithGenesisCmd.Parsed() {
-		cli.createBlockChainWithGenesis([]*Transaction{})
+
+		if *flagCreateBlockchainWithAddress == "" {
+			PrintUsage()
+			os.Exit(1)
+		}
+		cli.createBlockChainWithGenesis(*flagCreateBlockchainWithAddress)
 	}
 }

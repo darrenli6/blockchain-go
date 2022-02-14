@@ -28,7 +28,7 @@ func dbExists() bool {
 
 // 初始化区块链
 
-func CreateBlockChainWithGenesisBlock(txs []*Transaction) *BlockChain {
+func CreateBlockChainWithGenesisBlock(address string) *BlockChain {
 
 	if dbExists() {
 		fmt.Println("创世区块已经存在")
@@ -52,8 +52,11 @@ func CreateBlockChainWithGenesisBlock(txs []*Transaction) *BlockChain {
 		}
 		if nil != b {
 
+			// 生成交易
+			txCoinbase := NewCoinbaseTransaction(address)
+
 			// 创建创世区块
-			genesisBlock := CreateGenesisBlock(nil)
+			genesisBlock := CreateGenesisBlock([]*Transaction{txCoinbase})
 			err := b.Put(genesisBlock.Hash, genesisBlock.Serialize())
 			if nil != err {
 				log.Panicf("put data of genesisBlock to db failed ! error %v \n", err)
@@ -142,7 +145,21 @@ func (bc *BlockChain) PrintChain() {
 		fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
 		fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
 		fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
-		fmt.Printf(" \t Transaaction : %v \n", curBlock.Txs)
+		for _, tx := range curBlock.Txs {
+			fmt.Printf("\t\t tx-hash : %x \n", tx.TxHash)
+			fmt.Println("\t\t 输入..")
+			for _, vin := range tx.Vins {
+				fmt.Printf("\t\t\tvin-txhash: %v \n", vin.TxHash)
+				fmt.Printf("\t\t\tvin-vout: %v \n", vin.Vout)
+				fmt.Printf("\t\t\tvin-scripsig: %v \n", vin.ScriptSig)
+			}
+			fmt.Println("\t\t 输出..")
+			for _, vout := range tx.Vouts {
+				fmt.Printf("\t\t\tvout-value: %v \n", vout.Value)
+				fmt.Printf("\t\t\tvout-ScriptPubkey: %v \n", vout.ScriptPubkey)
+
+			}
+		}
 		fmt.Printf(" \t Nonce : %d \n", curBlock.Nonce)
 
 		// 判断是否已经遍历到创世区块
