@@ -253,11 +253,11 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 }
 
 // 返回指定地址的余额
-func (blockchain *BlockChain) UnUTXOS(address string) []*TxOutput {
+func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 
 	fmt.Printf("the address is %s \n", address)
 
-	var unUTXOS []*TxOutput
+	var unUTXOS []*UTXO
 	// 1. 遍历区块链,查找与address相关的所有交易
 	// 1.1 获取区块链对象
 	blockIterator := blockchain.Iterator()
@@ -299,7 +299,8 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*TxOutput {
 									//已经花费的输出
 									continue
 								} else {
-									unUTXOS = append(unUTXOS, vout)
+									utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+									unUTXOS = append(unUTXOS, utxo)
 								}
 
 							}
@@ -307,7 +308,8 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*TxOutput {
 						}
 					} else {
 						// 都是未花费的输出
-						unUTXOS = append(unUTXOS, vout)
+						utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+						unUTXOS = append(unUTXOS, utxo)
 					}
 				}
 
@@ -333,7 +335,7 @@ func (blockchain *BlockChain) getBalance(address string) int64 {
 	utxos := blockchain.UnUTXOS(address)
 	var amount int64
 	for _, utxo := range utxos {
-		amount += utxo.Value
+		amount += utxo.Output.Value
 	}
 	return amount
 }

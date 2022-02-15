@@ -33,66 +33,21 @@ func IsValidArgs() {
 	}
 }
 
-// 发送交易
-func (cli *CLI) send(from, to, amount []string) {
-	//检查交易
-	if dbExists() == false {
-		fmt.Println("数据库不存在")
-		os.Exit(1)
-	}
-	blockchain := BlockchainObject()
-	defer blockchain.DB.Close()
-	blockchain.MineNewBlock(from, to, amount)
-
-}
-
-// 查询余额
-func (cli *CLI) getBalance(from string) {
-	// 获取指定地址的余额
-
-	//outPuts := UnUTXOS(from)
-	//fmt.Println("unUTXO : %v \n", outPuts)
-
-	blockchain := BlockchainObject()
-
-	defer blockchain.DB.Close()
-	amount := blockchain.getBalance(from)
-
-	fmt.Printf("\t地址： %s的余额为：%d \n", from, amount)
-}
-
-// 添加区块
-
-func (cli *CLI) addBlock(txs []*Transaction) {
-
-	if dbExists() == false {
-		fmt.Println("数据库不存在")
-		os.Exit(1)
-	}
-	blockchain := BlockchainObject() //获取区块链对象
-	defer blockchain.DB.Close()
-	blockchain.AddBlock(txs)
-
-}
-
-// 输出区块链信息
-
-func (cli *CLI) printchain() {
-	if dbExists() == false {
-		fmt.Println("数据库不存在")
-		os.Exit(1)
-	}
-	blockchain := BlockchainObject() //获取区块链对象
-	defer blockchain.DB.Close()
-	blockchain.PrintChain()
-}
-
-// 创建区块链
-
-func (cli *CLI) createBlockChainWithGenesis(adress string) {
-
-	CreateBlockChainWithGenesisBlock(adress)
-}
+//
+//// 添加区块
+//
+//func (cli *CLI) addBlock(txs []*Transaction) {
+//
+//	if dbExists() == false {
+//		fmt.Println("数据库不存在")
+//		os.Exit(1)
+//	}
+//	blockchain := BlockchainObject() //获取区块链对象
+//	defer blockchain.DB.Close()
+//	blockchain.AddBlock(txs)
+//
+//}
+//
 
 // 运行函数
 func (cli *CLI) Run() {
@@ -113,7 +68,7 @@ func (cli *CLI) Run() {
 	getBalanceCmd := flag.NewFlagSet("getBalanceCmd", flag.ExitOnError)
 
 	// 获取命令行参数
-	flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据..")
+	//flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据..")
 	flagCreateBlockchainWithAddress := crearteBlcWithGenesisCmd.String("address", "", "地址..")
 
 	//./main send -from "[\"darren\"]" -to "[\"lijia\"]" -amount  "[\"2\"]"
@@ -194,15 +149,15 @@ func (cli *CLI) Run() {
 		cli.send(JSONToArray(*flagFromArg), JSONToArray(*flagToArg), JSONToArray(*flagAmountArg)) // 发送交易
 
 	}
-	// 添加区块链
-	if addBlockCmd.Parsed() {
-		if *flagAddBlockArg == "" {
-			PrintUsage()
-			os.Exit(1)
-		}
-
-		cli.addBlock([]*Transaction{})
-	}
+	//// 添加区块链
+	//if addBlockCmd.Parsed() {
+	//	if *flagAddBlockArg == "" {
+	//		PrintUsage()
+	//		os.Exit(1)
+	//	}
+	//
+	//	cli.addBlock([]*Transaction{})
+	//}
 
 	// 输出区块链信息命令
 	if printChainCmd.Parsed() {
