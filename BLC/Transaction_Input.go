@@ -10,3 +10,8 @@ type TxInput struct {
 	// 用户名 锁定脚本
 	ScriptSig string
 }
+
+// 判断能不能花费，能不能引用指定地址的output
+func (in *TxInput) UnLockWithAddress(address string) bool {
+	return in.ScriptSig == address
+}

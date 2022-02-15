@@ -49,3 +49,35 @@ func NewCoinbaseTransaction(address string) *Transaction {
 }
 
 // 生成转账交易
+func NewSimpleTransaction(from string, to string, amount int) *Transaction {
+
+	var txInputs []*TxInput // 输入
+
+	var txOutputs []*TxOutput // 输出
+
+	// 消费
+	txInput := &TxInput{[]byte("40956b11157f060b80a227452a89eaef6f4f2a2f7b75e9ffa833dce56d454a19"), 0, from}
+
+	txInputs = append(txInputs, txInput)
+
+	// 转账
+	txOutput := &TxOutput{int64(amount), to}
+
+	txOutputs = append(txOutputs, txOutput)
+	// 找零
+	txOutput = &TxOutput{10 - int64(amount), from}
+
+	txOutputs = append(txOutputs, txOutput)
+
+	// 生成交易
+	tx := &Transaction{nil, txInputs, txOutputs}
+	tx.HashTransaction()
+
+	return tx
+}
+
+// 判断指定交易是否是一个coinbase交易
+func (tx *Transaction) IsCoinbaseTransaction() bool {
+	return len(tx.Vins[0].TxHash) == 0 && tx.Vins[0].Vout == -1
+
+}

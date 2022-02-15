@@ -20,6 +20,8 @@ func PrintUsage() {
 	fmt.Printf("\taddblock -add DATA -- 交易数据 \n")
 	fmt.Printf("\tprintchain -- 输出区块链的信息. \n")
 	fmt.Printf("\tsend -from FROM -to TO -amount AMOUNT  -- 转账. \n")
+
+	fmt.Printf("\tgetbalance -address FROM  -- 查询余额. \n")
 }
 
 // 校验 如果只输入了程序命令，就输出指令用户并且推出程序
@@ -42,6 +44,21 @@ func (cli *CLI) send(from, to, amount []string) {
 	defer blockchain.DB.Close()
 	blockchain.MineNewBlock(from, to, amount)
 
+}
+
+// 查询余额
+func (cli *CLI) getBalance(from string) {
+	// 获取指定地址的余额
+
+	//outPuts := UnUTXOS(from)
+	//fmt.Println("unUTXO : %v \n", outPuts)
+
+	blockchain := BlockchainObject()
+
+	defer blockchain.DB.Close()
+	amount := blockchain.getBalance(from)
+
+	fmt.Printf("\t地址： %s的余额为：%d \n", from, amount)
 }
 
 // 添加区块
@@ -92,13 +109,20 @@ func (cli *CLI) Run() {
 	crearteBlcWithGenesisCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	// 转账的命令
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
+	// 查询余额
+	getBalanceCmd := flag.NewFlagSet("getBalanceCmd", flag.ExitOnError)
+
 	// 获取命令行参数
 	flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据..")
 	flagCreateBlockchainWithAddress := crearteBlcWithGenesisCmd.String("address", "", "地址..")
 
+	//./main send -from "[\"darren\"]" -to "[\"lijia\"]" -amount  "[\"2\"]"
 	flagFromArg := sendCmd.String("from", "", "转账源地址...")
 	flagToArg := sendCmd.String("to", "", "转账目标地址...")
 	flagAmountArg := sendCmd.String("amount", "", "转账金额")
+
+	// 查询余额
+	flagBalanceArg := getBalanceCmd.String("address", "", "查询地址..")
 
 	// 转账命令行参数
 	switch os.Args[1] {
@@ -124,12 +148,27 @@ func (cli *CLI) Run() {
 		if nil != err {
 			log.Panicf("parse cmd of createblockchain  falield ! %v", err)
 		}
+	case "getbalance":
+
+		err := getBalanceCmd.Parse(os.Args[2:])
+		if nil != err {
+			log.Panicf("parse getbalance  failed ! %v \n", err)
+		}
 
 	default:
 		PrintUsage()
 		os.Exit(1)
 
 	}
+	if getBalanceCmd.Parsed() {
+		if *flagBalanceArg == "" {
+			fmt.Println("未指定查询地址... ")
+			os.Exit(1)
+		}
+
+		cli.getBalance(*flagBalanceArg)
+	}
+
 	// 添加转账命令
 	if sendCmd.Parsed() {
 		if *flagFromArg == "" {
