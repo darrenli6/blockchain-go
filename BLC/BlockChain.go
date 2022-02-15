@@ -145,6 +145,7 @@ func (bc *BlockChain) PrintChain() {
 		fmt.Printf(" \t TimeStamp : %d \n", curBlock.TimeStamp)
 		fmt.Printf(" \t PrevBlockHash : %x \n", curBlock.PreBlockHash)
 		fmt.Printf(" \t Hash : %x \n", curBlock.Hash)
+		fmt.Printf(" \t Transaction : %x \n", curBlock.Txs)
 		for _, tx := range curBlock.Txs {
 			fmt.Printf("\t\t tx-hash : %x \n", tx.TxHash)
 			fmt.Println("\t\t 输入..")
@@ -195,5 +196,53 @@ func BlockchainObject() *BlockChain {
 	})
 
 	return &BlockChain{db, tip}
+
+}
+
+// 挖矿 生成新的区块，区块是通过挖矿产生的
+// 接受交易 进行打包确认 最终生成新的区块
+func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
+	fmt.Printf("\tFROM:[%s] \n", from)
+	fmt.Printf("\tTO:[%s] \n", to)
+	fmt.Printf("\tAMOUNT:[%s] \n", amount)
+	// 接受交易
+	var txs []*Transaction
+
+	// 打包交易
+
+	// 生成新的区块
+	var block *Block
+	// 从数据库中获取最新的区块
+	blockchain.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockTableName))
+		if b != nil {
+			// 获取最新区块的hash value
+			hash := b.Get([]byte("1"))
+			// 得到最新的区块
+			blockBytes := b.Get(hash) // 为了得到区块高度
+
+			block = DecerializeBlock(blockBytes)
+
+		}
+		return nil
+
+	})
+
+	// 生成新的区块
+	block = NewBlock(block.Height+1, block.Hash, txs)
+	// 持久化一个新的区块
+	blockchain.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(blockTableName))
+		if nil != b {
+			err := b.Put(block.Hash, block.Serialize())
+			if err != nil {
+				log.Panicf("put block to db failed ! %v\n", err)
+			}
+			b.Put([]byte("1"), block.Hash) // 更新最新区块的hash value
+			blockchain.Tip = block.Hash
+		}
+
+		return nil
+	})
 
 }

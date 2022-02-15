@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"fmt"
 	"log"
 	"time"
 )
@@ -22,6 +23,7 @@ type Block struct {
 
 // 创建新的区块
 func NewBlock(height int64, prevBlockHash []byte, txs []*Transaction) *Block {
+	fmt.Println("NewBlock ...")
 	var block Block
 	block = Block{Height: height, PreBlockHash: prevBlockHash, Txs: txs, TimeStamp: time.Now().Unix()}
 	//block.SetHash() // 生成当前的hash
