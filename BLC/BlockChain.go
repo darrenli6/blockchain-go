@@ -271,7 +271,7 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 		block := blockIterator.Next()  // 获取每一块区块信息
 		for _, tx := range block.Txs { // 遍历每一区块的交易
 			// 先查找输入
-			if tx.IsCoinbaseTransaction() {
+			if !tx.IsCoinbaseTransaction() {
 				// 转账交易的情况下 才查到输入
 				for _, in := range tx.Vins {
 					// 验证身份地址
@@ -285,6 +285,7 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 				}
 			}
 
+		work:
 			// 再查找输出
 			for index, vout := range tx.Vouts {
 				// 判断地址验证 检查btc是否属于自己传入地址
@@ -292,19 +293,24 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 					// 是否是一个没有花费的输出
 					// 判断已花费输出中是否为空
 					if len(spentTxOutputs) != 0 {
+						var isSpentTXOutput bool
 						for txHash, indexArray := range spentTxOutputs {
 
 							for _, i := range indexArray {
 								if txHash == hex.EncodeToString(tx.TxHash) && i == index {
+									isSpentTXOutput = true
 									//已经花费的输出
-									continue
-								} else {
-									utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
-									unUTXOS = append(unUTXOS, utxo)
+									continue work
 								}
 
 							}
 
+						}
+
+						//如果遍历过整个spentUtxo都没有vout ,才能说明是一个为花费输出
+						if isSpentTXOutput == false {
+							utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+							unUTXOS = append(unUTXOS, utxo)
 						}
 					} else {
 						// 都是未花费的输出
