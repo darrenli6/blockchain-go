@@ -210,7 +210,7 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 	// 接受交易
 	var txs []*Transaction
 	value, _ := strconv.Atoi(amount[0])
-	tx := NewSimpleTransaction(from[0], to[0], value)
+	tx := NewSimpleTransaction(from[0], to[0], value, blockchain)
 	txs = append(txs, tx)
 
 	// 打包交易
@@ -338,4 +338,33 @@ func (blockchain *BlockChain) getBalance(address string) int64 {
 		amount += utxo.Output.Value
 	}
 	return amount
+}
+
+// 查找可用的UTXO （遍历）
+// 转账
+// 超过需要的btc即可中断
+func (blockchain *BlockChain) FindSpendableUTXO(from string, amount int64) (int64, map[string][]int) {
+	//查找出来UTXO的值总和
+	var value int64
+	//可用的utxo
+	spendableUTXO := make(map[string][]int)
+	//获取所有的UTXO
+	utxos := blockchain.UnUTXOS(from)
+	// 遍历
+	for _, utxo := range utxos {
+		value += utxo.Output.Value
+		hash := hex.EncodeToString(utxo.TxHash)
+		spendableUTXO[hash] = append(spendableUTXO[hash], utxo.Index)
+		if value >= amount {
+			break
+		}
+	}
+
+	if value < amount {
+		fmt.Printf("%s 余额不足 \n", from)
+		os.Exit(1)
+	}
+
+	return value, spendableUTXO
+
 }

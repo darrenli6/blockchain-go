@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
+	"fmt"
 	"log"
 )
 
@@ -49,23 +51,34 @@ func NewCoinbaseTransaction(address string) *Transaction {
 }
 
 // 生成转账交易
-func NewSimpleTransaction(from string, to string, amount int) *Transaction {
+func NewSimpleTransaction(from string, to string, amount int, blockchain *BlockChain) *Transaction {
 
 	var txInputs []*TxInput // 输入
 
 	var txOutputs []*TxOutput // 输出
 
-	// 消费
-	txInput := &TxInput{[]byte("40956b11157f060b80a227452a89eaef6f4f2a2f7b75e9ffa833dce56d454a19"), 0, from}
+	// 查找指定地址的可用UTXO
+	money, spendableUXTODic := blockchain.FindSpendableUTXO(from, int64(amount))
 
-	txInputs = append(txInputs, txInput)
+	fmt.Printf("money : %v \n", money)
+
+	for txHash, indexArray := range spendableUXTODic {
+		txHashBytes, _ := hex.DecodeString(txHash)
+		for _, index := range indexArray {
+			//此处的输出是需要被消息的，必然会被其他交易的输入所引用
+			txInput := &TxInput{txHashBytes, index, from}
+			txInputs = append(txInputs, txInput)
+		}
+	}
+
+	// 消费
 
 	// 转账
 	txOutput := &TxOutput{int64(amount), to}
 
 	txOutputs = append(txOutputs, txOutput)
 	// 找零
-	txOutput = &TxOutput{10 - int64(amount), from}
+	txOutput = &TxOutput{money - int64(amount), from}
 
 	txOutputs = append(txOutputs, txOutput)
 

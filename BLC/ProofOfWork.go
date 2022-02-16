@@ -8,7 +8,7 @@ import (
 )
 
 // 目标难度值 代表生成的哈希前targetBit位为0，才能满足条件
-const targetBit = 20
+const targetBit = 16
 
 // 工作量证明
 type ProofOfWork struct {
