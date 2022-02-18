@@ -71,7 +71,10 @@ func (cli *CLI) Run() {
 	//flagAddBlockArg := addBlockCmd.String("data", "send 100 BTC TO eveyone", "交易数据..")
 	flagCreateBlockchainWithAddress := crearteBlcWithGenesisCmd.String("address", "", "地址..")
 
-	//./main send -from "[\"lijia\"]" -to "[\"darren\"]" -amount  "[\"2\"]"
+	//./main send -from "[\"darren\"]" -to "[\"lijia\"]" -amount  "[\"2\"]"
+
+	// 多人转
+	//./main send -from "[\"darren\",\"lijia\"]" -to "[\"lijia\",\"darren\"]" -amount  "[\"2\",\"1\"]"
 	flagFromArg := sendCmd.String("from", "", "转账源地址...")
 	flagToArg := sendCmd.String("to", "", "转账目标地址...")
 	flagAmountArg := sendCmd.String("amount", "", "转账金额")

@@ -51,14 +51,14 @@ func NewCoinbaseTransaction(address string) *Transaction {
 }
 
 // 生成转账交易
-func NewSimpleTransaction(from string, to string, amount int, blockchain *BlockChain) *Transaction {
+func NewSimpleTransaction(from string, to string, amount int, blockchain *BlockChain, txs []*Transaction) *Transaction {
 
 	var txInputs []*TxInput // 输入
 
 	var txOutputs []*TxOutput // 输出
 
 	// 查找指定地址的可用UTXO
-	money, spendableUXTODic := blockchain.FindSpendableUTXO(from, int64(amount))
+	money, spendableUXTODic := blockchain.FindSpendableUTXO(from, int64(amount), txs)
 
 	fmt.Printf("money : %v \n", money)
 

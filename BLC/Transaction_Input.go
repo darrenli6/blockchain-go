@@ -7,7 +7,7 @@ type TxInput struct {
 	TxHash []byte
 	// 引用上一笔交易的output索引
 	Vout int
-	// 用户名 锁定脚本
+	// 用户名 锁定脚本  转账人
 	ScriptSig string
 }
 

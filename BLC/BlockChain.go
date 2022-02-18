@@ -209,9 +209,20 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 	fmt.Printf("\tAMOUNT:[%s] \n", amount)
 	// 接受交易
 	var txs []*Transaction
-	value, _ := strconv.Atoi(amount[0])
-	tx := NewSimpleTransaction(from[0], to[0], value, blockchain)
-	txs = append(txs, tx)
+
+	for index, address := range from {
+
+		fmt.Printf("from:[%s] to [%s] amount :[%s] \n", address, to[index], amount[index])
+		value, _ := strconv.Atoi(amount[index])
+		tx := NewSimpleTransaction(address, to[index], value, blockchain, txs)
+		txs = append(txs, tx)
+
+		fmt.Printf("\t tx-hash:%x,tx-vouts:%v ,tx-vins:%v \n", tx.TxHash, tx.Vouts, tx.Vins)
+	}
+
+	//value, _ := strconv.Atoi(amount[0])
+	//tx := NewSimpleTransaction(from[0], to[0], value, blockchain)
+	//txs = append(txs, tx)
 
 	// 打包交易
 
@@ -253,41 +264,133 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 }
 
 // 返回指定地址的余额
-func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
+func (blockchain *BlockChain) UnUTXOS(address string, txs []*Transaction) []*UTXO {
 
 	fmt.Printf("the address is %s \n", address)
-
-	var unUTXOS []*UTXO
-	// 1. 遍历区块链,查找与address相关的所有交易
-	// 1.1 获取区块链对象
-	blockIterator := blockchain.Iterator()
 
 	// 2.存储存储所有已花费的输出  make分配内存
 	// key: 每个input所引用的交易hash
 	// value: output 索引列表
 	spentTxOutputs := make(map[string][]int)
 
+	var unUTXOS []*UTXO
+	// 查找缓冲中的UTXO
+	// 先查找输入
+	for _, tx := range txs {
+
+		// 先查找输入
+		if !tx.IsCoinbaseTransaction() {
+			// 转账交易的情况下 才查到输入
+			for _, in := range tx.Vins {
+				// 验证身份地址
+				if in.UnLockWithAddress(address) {
+
+					// 添加到已花费输入map中
+					key := hex.EncodeToString(in.TxHash)
+					spentTxOutputs[key] = append(spentTxOutputs[key], in.Vout)
+
+				}
+			}
+		}
+
+		// 查找缓冲中与数据中的输出
+
+		//
+	WorkCacheTx:
+		for index, vout := range tx.Vouts {
+			if vout.UnLockScriptPubkeyWithAddress(address) {
+				if len(spentTxOutputs) != 0 {
+					var isUtxoTx bool // 判断指定交易是否被其他交易引用
+					for txHash, indexArray := range spentTxOutputs {
+						txHashStr := hex.EncodeToString(tx.TxHash)
+						if txHash == txHashStr {
+							// 此处相等说明input引用了hash交易中的输出
+							isUtxoTx = true
+
+							var isSpentUTXO bool
+							for _, voutIndex := range indexArray {
+								if index == voutIndex {
+									isSpentUTXO = true
+									continue WorkCacheTx
+								}
+							}
+
+							if isSpentUTXO == false {
+								utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+								unUTXOS = append(unUTXOS, utxo)
+							}
+
+						}
+
+					}
+
+					if isUtxoTx == false {
+						utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+						unUTXOS = append(unUTXOS, utxo)
+					}
+				} else {
+					utxo := &UTXO{TxHash: tx.TxHash, Index: index, Output: vout}
+					unUTXOS = append(unUTXOS, utxo)
+				}
+			}
+		}
+	}
+
+	blockIterator := blockchain.Iterator()
+	for {
+		block := blockIterator.Next()
+		for _, tx := range block.Txs {
+			// 查找与address相关的交易
+			if !tx.IsCoinbaseTransaction() {
+				for _, in := range tx.Vins {
+					// 判断地址
+					if in.UnLockWithAddress(address) {
+						key := hex.EncodeToString(in.TxHash)
+						// 添加到已花费输出中
+						spentTxOutputs[key] = append(spentTxOutputs[key], in.Vout)
+					}
+				}
+			}
+		}
+		// 退出循环条件
+		var hashInt big.Int
+		hashInt.SetBytes(block.PreBlockHash)
+		// 是否到创世区块这里
+		if hashInt.Cmp(big.NewInt(0)) == 0 {
+			break
+		}
+
+	}
+
+	// 1. 遍历区块链,查找与address相关的所有交易
+	// 1.1 获取区块链对象
+	// 通过判断查找
+	blockIterator = blockchain.Iterator()
+
 	for {
 		block := blockIterator.Next()  // 获取每一块区块信息
 		for _, tx := range block.Txs { // 遍历每一区块的交易
 			// 先查找输入
-			if !tx.IsCoinbaseTransaction() {
-				// 转账交易的情况下 才查到输入
-				for _, in := range tx.Vins {
-					// 验证身份地址
-					if in.UnLockWithAddress(address) {
+			//if !tx.IsCoinbaseTransaction() {
+			//	// 转账交易的情况下 才查到输入
+			//	for _, in := range tx.Vins {
+			//		// 验证身份地址
+			//		if in.UnLockWithAddress(address) {
+			//
+			//			// 添加到已花费输入map中
+			//			key := hex.EncodeToString(in.TxHash)
+			//			spentTxOutputs[key] = append(spentTxOutputs[key], in.Vout)
+			//
+			//		}
+			//	}
+			//}
 
-						// 添加到已花费输入map中
-						key := hex.EncodeToString(in.TxHash)
-						spentTxOutputs[key] = append(spentTxOutputs[key], in.Vout)
+			//查询缓冲中的输出
 
-					}
-				}
-			}
-
-		work:
+		workDbTx:
 			// 再查找输出
 			for index, vout := range tx.Vouts {
+
 				// 判断地址验证 检查btc是否属于自己传入地址
 				if vout.UnLockScriptPubkeyWithAddress(address) {
 					// 是否是一个没有花费的输出
@@ -300,7 +403,7 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 								if txHash == hex.EncodeToString(tx.TxHash) && i == index {
 									isSpentTXOutput = true
 									//已经花费的输出
-									continue work
+									continue workDbTx
 								}
 
 							}
@@ -338,7 +441,7 @@ func (blockchain *BlockChain) UnUTXOS(address string) []*UTXO {
 // 查询指定地址的余额
 
 func (blockchain *BlockChain) getBalance(address string) int64 {
-	utxos := blockchain.UnUTXOS(address)
+	utxos := blockchain.UnUTXOS(address, []*Transaction{})
 	var amount int64
 	for _, utxo := range utxos {
 		amount += utxo.Output.Value
@@ -349,13 +452,13 @@ func (blockchain *BlockChain) getBalance(address string) int64 {
 // 查找可用的UTXO （遍历）
 // 转账
 // 超过需要的btc即可中断
-func (blockchain *BlockChain) FindSpendableUTXO(from string, amount int64) (int64, map[string][]int) {
+func (blockchain *BlockChain) FindSpendableUTXO(from string, amount int64, txs []*Transaction) (int64, map[string][]int) {
 	//查找出来UTXO的值总和
 	var value int64
 	//可用的utxo
 	spendableUTXO := make(map[string][]int)
 	//获取所有的UTXO
-	utxos := blockchain.UnUTXOS(from)
+	utxos := blockchain.UnUTXOS(from, txs)
 	// 遍历
 	for _, utxo := range utxos {
 		value += utxo.Output.Value
