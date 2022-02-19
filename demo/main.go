@@ -6,7 +6,7 @@ import (
 	"github.com/iocn-io/ripemd160"
 )
 
-func main() {
+func main1() {
 	//sha256
 
 	hasher := sha256.New()
