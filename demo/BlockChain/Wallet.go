@@ -1,10 +1,12 @@
 package BlockChain
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"github.com/iocn-io/ripemd160"
 	"log"
 )
@@ -30,6 +32,8 @@ type Wallet struct {
 func NewWallet() *Wallet {
 	privateKey, publicKey := newKeyPair()
 
+	fmt.Printf("private key:%v \n  ", privateKey)
+	fmt.Printf("public key:%v \n  ", publicKey)
 	return &Wallet{PrivateKey: privateKey, PublicKey: publicKey}
 }
 
@@ -89,4 +93,23 @@ func CheckSum(payload []byte) []byte {
 	hash2 := sha256.Sum256(hash1[:])
 
 	return hash2[:addressChecksumLen] // 取4个字节
+}
+
+// 判断地址有效性
+func IsValidForAddress(address []byte) bool {
+	// 1. 地址通过base58解码
+	version_pubkey_checksumBytes := Base58Decode(address)
+
+	// 2 拆分 进行校验和的校验
+	checkSumBytes := version_pubkey_checksumBytes[len(version_pubkey_checksumBytes)-addressChecksumLen:]
+
+	version_ripemd160 := version_pubkey_checksumBytes[:len(version_pubkey_checksumBytes)-addressChecksumLen]
+
+	checkBytes := CheckSum(version_ripemd160)
+
+	if bytes.Compare(checkBytes, checkSumBytes) == 0 {
+		return true
+	}
+
+	return false
 }
