@@ -1,4 +1,4 @@
-package main
+package BLC
 
 import (
 	"bytes"
@@ -8,16 +8,14 @@ import (
 
 //base58字符表
 
-var b58Alphabet = []byte("123456789" +
-	"abcdefjhijkmnopqrstuvwxyz" +
-	"ABCDEFGHJKLMNPQRSTUVWXYZ")
+var b58Alphabet = []byte("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefjhijkmnopqrstuvwxyz")
 
 // 实现编码函数
 func Base58Encode(input []byte) []byte {
 
 	var result []byte
 	x := big.NewInt(0).SetBytes(input)
-	fmt.Printf("x: %v \n", x)
+	// fmt.Printf("x: %v \n", x)
 	base := big.NewInt(int64(len(b58Alphabet))) //设置一个基数 58位
 	zero := big.NewInt(0)
 	mod := &big.Int{} //余数
@@ -37,7 +35,7 @@ func Base58Encode(input []byte) []byte {
 		}
 	}
 
-	fmt.Printf("result: %s \n", result)
+	// fmt.Printf("result: %s \n", result)
 	return result
 }
 

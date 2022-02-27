@@ -1,4 +1,4 @@
-package BlockChain
+package BLC
 
 import (
 	"bytes"
@@ -6,9 +6,9 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
-	"github.com/iocn-io/ripemd160"
 	"log"
+
+	"github.com/iocn-io/ripemd160"
 )
 
 // 钱包相关
@@ -32,8 +32,8 @@ type Wallet struct {
 func NewWallet() *Wallet {
 	privateKey, publicKey := newKeyPair()
 
-	fmt.Printf("private key:%v \n  ", privateKey)
-	fmt.Printf("public key:%v \n  ", publicKey)
+	// fmt.Printf("private key:%v \n  ", privateKey)
+	// fmt.Printf("public key:%v \n  ", publicKey)
 	return &Wallet{PrivateKey: privateKey, PublicKey: publicKey}
 }
 
