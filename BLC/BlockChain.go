@@ -3,11 +3,12 @@ package BLC
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/boltdb/bolt"
 	"log"
 	"math/big"
 	"os"
 	"strconv"
+
+	"github.com/boltdb/bolt"
 )
 
 const dbName = "bc.db" // 存储数据的数据库文件
@@ -154,12 +155,12 @@ func (bc *BlockChain) PrintChain() {
 			for _, vin := range tx.Vins {
 				fmt.Printf("\t\t\tvin-txhash: %v \n", vin.TxHash)
 				fmt.Printf("\t\t\tvin-vout: %v \n", vin.Vout)
-				fmt.Printf("\t\t\tvin-scripsig: %v \n", vin.ScriptSig)
+				//fmt.Printf("\t\t\tvin-scripsig: %v \n", vin.ScriptSig)
 			}
 			fmt.Println("\t\t 输出..")
 			for _, vout := range tx.Vouts {
 				fmt.Printf("\t\t\tvout-value: %v \n", vout.Value)
-				fmt.Printf("\t\t\tvout-ScriptPubkey: %v \n", vout.ScriptPubkey)
+				//	fmt.Printf("\t\t\tvout-ScriptPubkey: %v \n", vout.ScriptPubkey)
 
 			}
 		}
@@ -282,8 +283,11 @@ func (blockchain *BlockChain) UnUTXOS(address string, txs []*Transaction) []*UTX
 		if !tx.IsCoinbaseTransaction() {
 			// 转账交易的情况下 才查到输入
 			for _, in := range tx.Vins {
-				// 验证身份地址
-				if in.UnLockWithAddress(address) {
+				// 验证身份地址 公钥
+				publicKeyHash := Base58Decode([]byte(address))
+				// version + publichash + checksum
+				ripemd160Hash := publicKeyHash[1:(len(publicKeyHash) - addressChecksumLen)]
+				if in.UnLockRipemd160Hash(ripemd160Hash) {
 
 					// 添加到已花费输入map中
 					key := hex.EncodeToString(in.TxHash)
@@ -344,7 +348,11 @@ func (blockchain *BlockChain) UnUTXOS(address string, txs []*Transaction) []*UTX
 			if !tx.IsCoinbaseTransaction() {
 				for _, in := range tx.Vins {
 					// 判断地址
-					if in.UnLockWithAddress(address) {
+					// 验证身份地址 公钥
+					publicKeyHash := Base58Decode([]byte(address))
+					// version + publichash + checksum
+					ripemd160Hash := publicKeyHash[1 : len(publicKeyHash)-addressChecksumLen]
+					if in.UnLockRipemd160Hash(ripemd160Hash) {
 						key := hex.EncodeToString(in.TxHash)
 						// 添加到已花费输出中
 						spentTxOutputs[key] = append(spentTxOutputs[key], in.Vout)

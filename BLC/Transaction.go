@@ -38,10 +38,10 @@ func (tx *Transaction) HashTransaction() {
 // 生成coinbase 交易 挖矿的交易 没有输入 由系统输入
 func NewCoinbaseTransaction(address string) *Transaction {
 	//输入
-	txInput := &TxInput{[]byte{}, -1, "Genesis Data"}
-	// 输出
-	txOutput := &TxOutput{10, address}
+	txInput := &TxInput{[]byte{}, -1, nil, nil}
 
+	// 输出
+	txOutput := NewTxOutput(10, address)
 	// hash
 	txCoinbase := &Transaction{nil, []*TxInput{txInput}, []*TxOutput{txOutput}}
 	txCoinbase.HashTransaction()
@@ -62,23 +62,31 @@ func NewSimpleTransaction(from string, to string, amount int, blockchain *BlockC
 
 	fmt.Printf("money : %v \n", money)
 
+	// 获取钱包集合
+	wallets, _ := NewWallets()
+	wallet := wallets.Wallets[from] // 指定地址得到钱包结构
+
 	for txHash, indexArray := range spendableUXTODic {
 		txHashBytes, _ := hex.DecodeString(txHash)
 		for _, index := range indexArray {
 			//此处的输出是需要被消息的，必然会被其他交易的输入所引用
-			txInput := &TxInput{txHashBytes, index, from}
+
+			// 从地址 找到wallet  然后可以找到公钥
+
+			txInput := &TxInput{txHashBytes, index, nil, wallet.PublicKey}
 			txInputs = append(txInputs, txInput)
 		}
 	}
 
 	// 消费
 
+	NewTxOutput(int64(amount), to)
 	// 转账
-	txOutput := &TxOutput{int64(amount), to}
+	txOutput := NewTxOutput(int64(amount), to)
 
 	txOutputs = append(txOutputs, txOutput)
 	// 找零
-	txOutput = &TxOutput{money - int64(amount), from}
+	txOutput = NewTxOutput(money-int64(amount), from)
 
 	txOutputs = append(txOutputs, txOutput)
 
