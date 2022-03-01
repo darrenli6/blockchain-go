@@ -38,7 +38,6 @@ func NewWallet() *Wallet {
 }
 
 // 生成公钥 私钥对
-
 func newKeyPair() (ecdsa.PrivateKey, []byte) {
 	curve := elliptic.P256()
 	//椭圆加密
@@ -75,7 +74,7 @@ func (w *Wallet) GetAddress() []byte {
 	ripemd160Hash := Ripemd160Hash(w.PublicKey)
 	// 2 生成version 并且加入hash中
 	version_ripemd160hash := append([]byte{version}, ripemd160Hash...)
-	// 3生成校验和数据
+	// 3生成校验和数据   为了以后判断地址有效性
 	checkSumBytes := CheckSum(version_ripemd160hash)
 	// 4 拼接校验和
 	bytes := append(version_ripemd160hash, checkSumBytes...)
