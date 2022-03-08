@@ -20,6 +20,7 @@ func IntToHex(data int64) []byte {
 
 // 标准json格式转组数
 // ./main send -from "[\"lijia\",\"lisi\"]" -to "[\"darren\",\"zhangsan\"]" -amount  "[\"10\",\"1\"]"
+//./main send -from "[\"15exdKbAKQcHkXeyLFwR22XY6efqk2ERhz\"]" -to "[\"1w9FGzeUDB577dv5WEPmDveLsGWc3jTZM\"]" -amount  "[\"1\"]"
 func JSONToArray(jsonString string) []string {
 
 	var strArr []string

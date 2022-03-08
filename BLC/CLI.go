@@ -106,11 +106,7 @@ func (cli *CLI) Run() {
 			log.Panicf("parse cmd of send failed ! %v \n", err)
 
 		}
-	// case "addblock":
-	// 	err := addBlockCmd.Parse(os.Args[2:])
-	// 	if nil != err {
-	// 		log.Panicf("parse cmd of addblock falield ! %v", err)
-	// 	}
+
 	case "printchain":
 		err := printChainCmd.Parse(os.Args[2:])
 		if nil != err {
@@ -173,9 +169,6 @@ func (cli *CLI) Run() {
 			PrintUsage()
 			os.Exit(1)
 		}
-		fmt.Printf("\tFROM:[%s] \n", JSONToArray(*flagFromArg))
-		fmt.Printf("\tTO:[%s] \n", JSONToArray(*flagToArg))
-		fmt.Printf("\tAMOUNT:[%s] \n", JSONToArray(*flagAmountArg))
 
 		cli.send(JSONToArray(*flagFromArg), JSONToArray(*flagToArg), JSONToArray(*flagAmountArg)) // 发送交易
 

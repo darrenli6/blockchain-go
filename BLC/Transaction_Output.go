@@ -42,5 +42,5 @@ address: [15exdKbAKQcHkXeyLFwR22XY6efqk2ERhz]
  address: [1Ao5ozQJfPavNirDSoKZHByzkn8KokwzwM]
  address: [1w9FGzeUDB577dv5WEPmDveLsGWc3jTZM]
 
- ./main send -from "[\"15exdKbAKQcHkXeyLFwR22XY6efqk2ERhz\"]" -to "[\"1Ao5ozQJfPavNirDSoKZHByzkn8KokwzwM\"]" -amount  "[\"1\"]"
+ ./main send -from "[\"15exdKbAKQcHkXeyLFwR22XY6efqk2ERhz\"]" -to "[\"1Ao5ozQJfPavNirDSoKZHByzkn8KokwzwM\"]" -amount   
 */

@@ -1,6 +1,8 @@
 package BLC
 
 import (
+	"bytes"
+	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -160,7 +162,7 @@ func (bc *BlockChain) PrintChain() {
 			fmt.Println("\t\t 输出..")
 			for _, vout := range tx.Vouts {
 				fmt.Printf("\t\t\tvout-value: %v \n", vout.Value)
-				//	fmt.Printf("\t\t\tvout-ScriptPubkey: %v \n", vout.ScriptPubkey)
+				fmt.Printf("\t\t\tvout-ScriptPubkey: %x \n", vout.Ripemd160Hash)
 
 			}
 		}
@@ -205,21 +207,25 @@ func BlockchainObject() *BlockChain {
 // 挖矿 生成新的区块，区块是通过挖矿产生的
 // 接受交易 进行打包确认 最终生成新的区块
 func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
-	fmt.Printf("\tFROM:[%s] \n", from)
-	fmt.Printf("\tTO:[%s] \n", to)
-	fmt.Printf("\tAMOUNT:[%s] \n", amount)
+	// fmt.Printf("\tFROM:[%s] \n", from)
+	// fmt.Printf("\tTO:[%s] \n", to)
+	// fmt.Printf("\tAMOUNT:[%s] \n", amount)
 	// 接受交易
 	var txs []*Transaction
 
 	for index, address := range from {
 
-		fmt.Printf("from:[%s] to [%s] amount :[%s] \n", address, to[index], amount[index])
+		//fmt.Printf("from:[%s] to [%s] amount :[%s] \n", address, to[index], amount[index])
 		value, _ := strconv.Atoi(amount[index])
 		tx := NewSimpleTransaction(address, to[index], value, blockchain, txs)
 		txs = append(txs, tx)
 
-		fmt.Printf("\t tx-hash:%x,tx-vouts:%v ,tx-vins:%v \n", tx.TxHash, tx.Vouts, tx.Vins)
+		//fmt.Printf("\t tx-hash:%x,tx-vouts:%v ,tx-vins:%v \n", tx.TxHash, tx.Vouts, tx.Vins)
 	}
+	// 给旷工一定的奖励
+	// 默认情况下 设置地址列表中第一个地址为旷工奖励地址
+	tx := NewCoinbaseTransaction(from[0])
+	txs = append(txs, tx)
 
 	//value, _ := strconv.Atoi(amount[0])
 	//tx := NewSimpleTransaction(from[0], to[0], value, blockchain)
@@ -244,6 +250,15 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 		return nil
 
 	})
+	// 验证交易签名
+
+	for _, tx := range txs {
+		// 验证每一笔交易
+		// fmt.Printf("txHash : %v \n", tx.TxHash)
+		if !blockchain.VerifyTransaction(tx) {
+			log.Panic("ERROR : tx  verified failed ! \n")
+		}
+	}
 
 	// 生成新的区块
 	block = NewBlock(block.Height+1, block.Hash, txs)
@@ -266,8 +281,6 @@ func (blockchain *BlockChain) MineNewBlock(from, to, amount []string) {
 
 // 返回指定地址的余额
 func (blockchain *BlockChain) UnUTXOS(address string, txs []*Transaction) []*UTXO {
-
-	fmt.Printf("the address is %s \n", address)
 
 	// 2.存储存储所有已花费的输出  make分配内存
 	// key: 每个input所引用的交易hash
@@ -484,4 +497,69 @@ func (blockchain *BlockChain) FindSpendableUTXO(from string, amount int64, txs [
 
 	return value, spendableUTXO
 
+}
+
+// 查找指定的交易
+// ID 代表input所引用的交易hash
+
+func (blockchain *BlockChain) FindTransaction(ID []byte) Transaction {
+	bcit := blockchain.Iterator()
+	for {
+		block := bcit.Next()
+		for _, tx := range block.Txs {
+			// 判断交易hash是否相等
+			if bytes.Compare(tx.TxHash, ID) == 0 {
+				return *tx
+			}
+		}
+		var hashInt big.Int
+		hashInt.SetBytes(block.PreBlockHash)
+		if big.NewInt(0).Cmp(&hashInt) == 0 {
+			break
+		}
+	}
+
+	return Transaction{}
+
+}
+
+// 交易签名
+func (blockchain *BlockChain) SignTransaction(tx *Transaction, privateKey ecdsa.PrivateKey) {
+
+	// coinbase不需要签名
+	if tx.IsCoinbaseTransaction() {
+		return
+	}
+
+	// 处理input 主要为了确认发送者 vout所属于的交易 用于确定交易的发送者
+	prevTXs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vins {
+		// 查找所引用的每一个交易
+		prevTx := blockchain.FindTransaction(vin.TxHash)
+		//
+		prevTXs[hex.EncodeToString(prevTx.TxHash)] = prevTx
+
+	}
+
+	// 实现签名函数
+
+	tx.Sign(privateKey, prevTXs)
+
+}
+
+// 验证签名
+
+func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
+
+	// 查找指定交易的关联交易
+	prevTxs := make(map[string]Transaction)
+
+	for _, vin := range tx.Vins {
+		prevTx := bc.FindTransaction(vin.TxHash)
+		prevTxs[hex.EncodeToString(prevTx.TxHash)] = prevTx
+
+	}
+	// return tx.verify()
+	return tx.Verify(prevTxs)
 }
